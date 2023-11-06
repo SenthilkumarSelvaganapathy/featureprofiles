@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/open-traffic-generator/snappi/gosnappi"
 	"github.com/openconfig/featureprofiles/internal/attrs"
 	"github.com/openconfig/featureprofiles/internal/deviations"
 	"github.com/openconfig/featureprofiles/internal/fptest"
@@ -117,7 +118,7 @@ func TestBasicConfigWithTraffic(t *testing.T) {
 	ap1 := ate.Port(t, "port1")
 	ap2 := ate.Port(t, "port2")
 	ap3 := ate.Port(t, "port3")
-	top := ate.OTG().NewConfig(t)
+	top := gosnappi.NewConfig()
 
 	intf1.AddToOTG(top, ap1, &dutPort1)
 	intf2.AddToOTG(top, ap2, &dutPort2)
@@ -614,6 +615,10 @@ func ConfigureQoS(t *testing.T, dut *ondatra.DUTDevice) {
 		queueName:   queues.BE1,
 		targetGroup: "target-group-BE1",
 	}, {
+		desc:        "forwarding-group-BE0",
+		queueName:   queues.BE0,
+		targetGroup: "target-group-BE0",
+	}, {
 		desc:        "forwarding-group-AF1",
 		queueName:   queues.AF1,
 		targetGroup: "target-group-AF1",
@@ -974,6 +979,9 @@ func ConfigureQoS(t *testing.T, dut *ondatra.DUTDevice) {
 		i := q.GetOrCreateInterface(dp3.Name())
 		i.SetInterfaceId(dp3.Name())
 		i.GetOrCreateInterfaceRef().Interface = ygot.String(dp3.Name())
+		if deviations.InterfaceRefConfigUnsupported(dut) {
+			i.InterfaceRef = nil
+		}
 		output := i.GetOrCreateOutput()
 		schedulerPolicy := output.GetOrCreateSchedulerPolicy()
 		schedulerPolicy.SetName(tc.scheduler)
